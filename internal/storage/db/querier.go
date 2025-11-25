@@ -9,7 +9,13 @@ import (
 )
 
 type Querier interface {
+	GetDueWebhooks(ctx context.Context) ([]GetDueWebhooksRow, error)
 	GetIdempotency(ctx context.Context, key string) ([]byte, error)
+	GetWebhookByEventID(ctx context.Context, eventID string) (WebhookOutbox, error)
+	IncrementWebhookAttempt(ctx context.Context, id int64) error
+	InsertWebhookOutbox(ctx context.Context, arg InsertWebhookOutboxParams) error
+	MarkWebhookFailed(ctx context.Context, id int64) error
+	MarkWebhookSent(ctx context.Context, id int64) error
 	SaveIdempotency(ctx context.Context, arg SaveIdempotencyParams) error
 }
 

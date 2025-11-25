@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"integration-hub/internal/pkg/hmac"
 	"io"
 	"net/http"
@@ -41,10 +42,17 @@ func SignatureMiddleware(secret string) func(http.Handler) http.Handler {
 
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
-				http.Error(w, "failed to read body", http.StatusBadRequest)
+				http.Error(w, "cannot read body", http.StatusBadRequest)
 				return
 			}
-			r.Body = io.NopCloser(io.LimitReader(io.NopCloser(io.MultiReader()), int64(len(body))))
+			errClose := r.Body.Close()
+			if errClose != nil {
+				http.Error(w, "cannot read body", http.StatusBadRequest)
+				return
+			}
+
+			// Restore body
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			if !hmac.VerifySignature(secret, body, timestamp, signature) {
 				http.Error(w, "signature invalid", http.StatusUnauthorized)

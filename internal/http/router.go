@@ -1,6 +1,7 @@
 package http
 
 import (
+	"integration-hub/internal/operator"
 	"integration-hub/internal/storage"
 	"integration-hub/internal/storage/db"
 
@@ -8,24 +9,31 @@ import (
 )
 
 type Handler struct {
-	store *storage.IdempotencyStore
+	store    *storage.IdempotencyStore
+	operator *operator.Client
+	queries  *db.Queries
 }
 
-func NewHandler(q *db.Queries) *Handler {
+func NewHandler(q *db.Queries, op *operator.Client) *Handler {
 	return &Handler{
-		store: storage.NewIdempotencyStore(q),
+		store:    storage.NewIdempotencyStore(q),
+		operator: op,
+		queries:  q,
 	}
 }
 
 func (h *Handler) Router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(IdempotencyMiddleware(h.store))
+	r.Group(func(r chi.Router) {
+		r.Use(IdempotencyMiddleware(h.store))
+		r.Use(SignatureMiddleware("my-secret-key"))
 
-	r.Use(SignatureMiddleware("my-secret-key"))
+		r.Post("/wallet/debit", h.Debit)
+		r.Post("/wallet/credit", h.Credit)
+	})
 
-	r.Post("/debit", h.Debit)
-	r.Post("/credit", h.Credit)
+	r.Post("/webhook/operator", h.OperatorWebhook)
 
 	return r
 }

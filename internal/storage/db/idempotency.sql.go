@@ -22,6 +22,55 @@ func (q *Queries) GetIdempotency(ctx context.Context, key string) ([]byte, error
 	return response, err
 }
 
+const getWebhookByEventID = `-- name: GetWebhookByEventID :one
+SELECT id, event_id, payload, status, attempt_count, next_attempt_at, created_at
+FROM webhook_outbox
+WHERE event_id = $1
+`
+
+func (q *Queries) GetWebhookByEventID(ctx context.Context, eventID string) (WebhookOutbox, error) {
+	row := q.db.QueryRow(ctx, getWebhookByEventID, eventID)
+	var i WebhookOutbox
+	err := row.Scan(
+		&i.ID,
+		&i.EventID,
+		&i.Payload,
+		&i.Status,
+		&i.AttemptCount,
+		&i.NextAttemptAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const incrementWebhookAttempt = `-- name: IncrementWebhookAttempt :exec
+UPDATE webhook_outbox
+SET attempt_count = attempt_count + 1,
+    next_attempt_at = NOW() + INTERVAL '10 seconds'
+WHERE id = $1
+`
+
+func (q *Queries) IncrementWebhookAttempt(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, incrementWebhookAttempt, id)
+	return err
+}
+
+const insertWebhookOutbox = `-- name: InsertWebhookOutbox :exec
+INSERT INTO webhook_outbox (event_id, payload)
+VALUES ($1, $2)
+    ON CONFLICT (event_id) DO NOTHING
+`
+
+type InsertWebhookOutboxParams struct {
+	EventID string
+	Payload []byte
+}
+
+func (q *Queries) InsertWebhookOutbox(ctx context.Context, arg InsertWebhookOutboxParams) error {
+	_, err := q.db.Exec(ctx, insertWebhookOutbox, arg.EventID, arg.Payload)
+	return err
+}
+
 const saveIdempotency = `-- name: SaveIdempotency :exec
 INSERT INTO idempotency_keys (key, response)
 VALUES ($1, $2)

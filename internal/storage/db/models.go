@@ -14,3 +14,13 @@ type IdempotencyKey struct {
 	Response  []byte
 	CreatedAt pgtype.Timestamptz
 }
+
+type WebhookOutbox struct {
+	ID            int64
+	EventID       string
+	Payload       []byte
+	Status        string
+	AttemptCount  int32
+	NextAttemptAt pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+}
