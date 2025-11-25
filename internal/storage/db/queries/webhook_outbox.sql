@@ -6,13 +6,14 @@ WHERE status = 'PENDING'
 ORDER BY id
     LIMIT 50;
 
--- name: MarkWebhookSent :exec
-UPDATE webhook_outbox
-SET status = 'SENT'
-WHERE id = $1;
-
 -- name: MarkWebhookFailed :exec
 UPDATE webhook_outbox
-SET attempt_count = attempt_count + 1,
-    next_attempt_at = NOW() + INTERVAL '10 seconds'
+SET status = 'FAILED',
+    attempt_count = attempt_count + 1,
+    next_attempt_at = $2
+WHERE id = $1;
+
+-- name: MarkWebhookSuccess :exec
+UPDATE webhook_outbox
+SET status = 'SUCCESS', attempt_count = attempt_count + 1
 WHERE id = $1;

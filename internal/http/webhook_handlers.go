@@ -31,7 +31,7 @@ func (h *Handler) OperatorWebhook(w http.ResponseWriter, r *http.Request) {
 		Payload: payloadBytes,
 	})
 	if err != nil {
-		// ON CONFLICT DO NOTHING → ok, it’s idempotent
+		log.Println("error inserting webhook outbox", err)
 	}
 
 	w.WriteHeader(http.StatusOK)

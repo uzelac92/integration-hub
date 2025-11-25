@@ -58,23 +58,29 @@ func (q *Queries) GetDueWebhooks(ctx context.Context) ([]GetDueWebhooksRow, erro
 
 const markWebhookFailed = `-- name: MarkWebhookFailed :exec
 UPDATE webhook_outbox
-SET attempt_count = attempt_count + 1,
-    next_attempt_at = NOW() + INTERVAL '10 seconds'
+SET status = 'FAILED',
+    attempt_count = attempt_count + 1,
+    next_attempt_at = $2
 WHERE id = $1
 `
 
-func (q *Queries) MarkWebhookFailed(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, markWebhookFailed, id)
+type MarkWebhookFailedParams struct {
+	ID            int64
+	NextAttemptAt pgtype.Timestamptz
+}
+
+func (q *Queries) MarkWebhookFailed(ctx context.Context, arg MarkWebhookFailedParams) error {
+	_, err := q.db.Exec(ctx, markWebhookFailed, arg.ID, arg.NextAttemptAt)
 	return err
 }
 
-const markWebhookSent = `-- name: MarkWebhookSent :exec
+const markWebhookSuccess = `-- name: MarkWebhookSuccess :exec
 UPDATE webhook_outbox
-SET status = 'SENT'
+SET status = 'SUCCESS', attempt_count = attempt_count + 1
 WHERE id = $1
 `
 
-func (q *Queries) MarkWebhookSent(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, markWebhookSent, id)
+func (q *Queries) MarkWebhookSuccess(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, markWebhookSuccess, id)
 	return err
 }

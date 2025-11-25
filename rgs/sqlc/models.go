@@ -32,6 +32,14 @@ type Bet struct {
 	Status         string    `json:"status"`
 	IdempotencyKey string    `json:"idempotency_key"`
 	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type HubWebhookEvent struct {
+	ID         int32           `json:"id"`
+	EventID    string          `json:"event_id"`
+	Payload    json.RawMessage `json:"payload"`
+	ReceivedAt time.Time       `json:"received_at"`
 }
 
 type Operator struct {

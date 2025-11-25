@@ -27,7 +27,7 @@ func (h *Handler) Router() chi.Router {
 
 	r.Group(func(r chi.Router) {
 		r.Use(IdempotencyMiddleware(h.store))
-		r.Use(SignatureMiddleware("my-secret-key"))
+		r.Use(SignatureMiddleware("testsecret123"))
 
 		r.Post("/wallet/debit", h.Debit)
 		r.Post("/wallet/credit", h.Credit)

@@ -14,8 +14,8 @@ type Querier interface {
 	GetWebhookByEventID(ctx context.Context, eventID string) (WebhookOutbox, error)
 	IncrementWebhookAttempt(ctx context.Context, id int64) error
 	InsertWebhookOutbox(ctx context.Context, arg InsertWebhookOutboxParams) error
-	MarkWebhookFailed(ctx context.Context, id int64) error
-	MarkWebhookSent(ctx context.Context, id int64) error
+	MarkWebhookFailed(ctx context.Context, arg MarkWebhookFailedParams) error
+	MarkWebhookSuccess(ctx context.Context, id int64) error
 	SaveIdempotency(ctx context.Context, arg SaveIdempotencyParams) error
 }
 

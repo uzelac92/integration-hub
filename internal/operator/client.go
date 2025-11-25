@@ -25,6 +25,14 @@ func NewClient(baseUrl string) *Client {
 	}
 }
 
+func jitter(d time.Duration) time.Duration {
+	return d + time.Duration(50-time.Now().UnixNano()%100)*time.Millisecond
+}
+
+func urlContains(url, part string) bool {
+	return len(url) >= len(part) && (url[len(url)-len(part):] == part || url[len(url)-len(part)-1] == '/')
+}
+
 func (c *Client) doRequest(method, url string, body any, out any) error {
 	var buf bytes.Buffer
 	if body != nil {
@@ -40,29 +48,35 @@ func (c *Client) doRequest(method, url string, body any, out any) error {
 
 	req.Header.Set("Content-Type", "application/json")
 
+	if m, ok := body.(map[string]any); ok {
+		if ref, ok := m["refId"].(string); ok {
+			if method == "POST" && urlContains(url, "withdraw") {
+				req.Header.Set("X-Idempotency-Key", "withdraw-"+ref)
+			}
+			if method == "POST" && urlContains(url, "deposit") {
+				req.Header.Set("X-Idempotency-Key", "deposit-"+ref)
+			}
+		}
+	}
+
 	var lastErr error
-
 	const maxBodySize = 1 << 20 // 1MB
+	const maxRetries = 5
 
-	for attempt := 1; attempt <= 3; attempt++ {
-
+	for attempt := 1; attempt <= maxRetries; attempt++ {
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
 			lastErr = fmt.Errorf("http error: %w", err)
-			time.Sleep(time.Duration(attempt) * time.Second)
+			time.Sleep(jitter(time.Duration(attempt) * time.Second))
 			continue
 		}
 
-		// Read limited body
 		bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, maxBodySize))
-		errClose := resp.Body.Close()
-		if errClose != nil {
-			return fmt.Errorf("close response body: %w", errClose)
-		}
+		_ = resp.Body.Close()
 
 		if readErr != nil {
 			lastErr = fmt.Errorf("read body: %w", readErr)
-			time.Sleep(time.Duration(attempt) * time.Second)
+			time.Sleep(jitter(time.Duration(attempt) * time.Second))
 			continue
 		}
 
@@ -70,7 +84,7 @@ func (c *Client) doRequest(method, url string, body any, out any) error {
 		if resp.StatusCode == http.StatusTooManyRequests {
 			retryAfter := 1
 			if hdr := resp.Header.Get("Retry-After"); hdr != "" {
-				if v, err := strconv.Atoi(hdr); err == nil {
+				if v, err := strconv.Atoi(hdr); err == nil && v > 0 {
 					retryAfter = v
 				}
 			}
@@ -80,7 +94,7 @@ func (c *Client) doRequest(method, url string, body any, out any) error {
 
 		if resp.StatusCode >= 500 {
 			lastErr = fmt.Errorf("server error %d: %s", resp.StatusCode, string(bodyBytes))
-			time.Sleep(time.Duration(attempt) * time.Second)
+			time.Sleep(jitter(time.Duration(attempt) * time.Second))
 			continue
 		}
 
@@ -100,6 +114,7 @@ func (c *Client) doRequest(method, url string, body any, out any) error {
 	if lastErr != nil {
 		return fmt.Errorf("failed after retries: %w", lastErr)
 	}
+
 	return fmt.Errorf("failed after retries without specific error")
 }
 

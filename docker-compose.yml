@@ -15,6 +15,12 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - ihub-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rgsdb"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
 
   migrate-rgs:
     image: migrate/migrate
@@ -80,8 +86,10 @@ services:
     build: ./rgs
     container_name: ihub-rgs
     depends_on:
-      - postgres
-      - migrate-rgs
+      postgres:
+        condition: service_healthy
+      migrate-rgs:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/rgsdb?sslmode=disable
       WALLET_URL: http://integration-hub:8080

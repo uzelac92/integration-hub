@@ -51,7 +51,6 @@ func SignatureMiddleware(secret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Restore body
 			r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			if !hmac.VerifySignature(secret, body, timestamp, signature) {

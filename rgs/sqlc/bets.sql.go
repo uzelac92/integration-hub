@@ -16,7 +16,7 @@ INSERT INTO bets (
     status, idempotency_key
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at
+    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at, updated_at
 `
 
 type CreateBetParams struct {
@@ -53,12 +53,13 @@ func (q *Queries) CreateBet(ctx context.Context, arg CreateBetParams) (Bet, erro
 		&i.Status,
 		&i.IdempotencyKey,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getBetByIdempotency = `-- name: GetBetByIdempotency :one
-SELECT id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at FROM bets
+SELECT id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at, updated_at FROM bets
 WHERE operator_id = $1 AND idempotency_key = $2
     LIMIT 1
 `
@@ -82,12 +83,13 @@ func (q *Queries) GetBetByIdempotency(ctx context.Context, arg GetBetByIdempoten
 		&i.Status,
 		&i.IdempotencyKey,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getBetsByRound = `-- name: GetBetsByRound :many
-SELECT id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at FROM bets
+SELECT id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at, updated_at FROM bets
 WHERE round_id = $1
 ORDER BY id
 `
@@ -112,6 +114,7 @@ func (q *Queries) GetBetsByRound(ctx context.Context, roundID int32) ([]Bet, err
 			&i.Status,
 			&i.IdempotencyKey,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -130,7 +133,7 @@ const markBetAsWon = `-- name: MarkBetAsWon :exec
 UPDATE bets
 SET status = 'won'
 WHERE id = $1
-    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at
+    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at, updated_at
 `
 
 func (q *Queries) MarkBetAsWon(ctx context.Context, id int32) error {
@@ -145,7 +148,7 @@ SET
     win_amount = $3,
     updated_at = NOW()
 WHERE id = $1
-    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at
+    RETURNING id, operator_id, player_id, round_id, amount, outcome, win_amount, status, idempotency_key, created_at, updated_at
 `
 
 type UpdateBetStatusParams struct {
@@ -168,6 +171,7 @@ func (q *Queries) UpdateBetStatus(ctx context.Context, arg UpdateBetStatusParams
 		&i.Status,
 		&i.IdempotencyKey,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

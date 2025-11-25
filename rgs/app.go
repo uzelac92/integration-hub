@@ -44,7 +44,7 @@ func BuildApp(db *sql.DB, cfg Config) *chi.Mux {
 	roundsHandler := handlers.NewRoundsHandler(queries)
 	sseHandler := handlers.NewSSEHandler(eventBus)
 	auditHandler := handlers.NewAuditHandler(complianceSvc)
-	hubWebhookHandler := handlers.NewHubWebhookHandler()
+	hubWebhookHandler := handlers.NewHubWebhookHandler(queries)
 
 	// Router
 	r := chi.NewRouter()
