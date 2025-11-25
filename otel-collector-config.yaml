@@ -13,10 +13,13 @@ exporters:
 processors:
   batch:
   memory_limiter:
+    limit_mib: 400
+    spike_limit_mib: 100
+    check_interval: 1s
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [otlp]
