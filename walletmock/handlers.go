@@ -1,8 +1,7 @@
-package http
+package main
 
 import (
 	"encoding/json"
-	"integration-hub/walletmock/internal/wallet"
 	"log"
 	"net/http"
 
@@ -10,10 +9,10 @@ import (
 )
 
 type Handler struct {
-	wallet *wallet.Service
+	wallet *Service
 }
 
-func NewHandler(w *wallet.Service) *Handler {
+func NewHandler(w *Service) *Handler {
 	return &Handler{wallet: w}
 }
 

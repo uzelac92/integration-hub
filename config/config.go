@@ -20,7 +20,7 @@ func LoadConfig() Config {
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://rgs:rgs@localhost:5432/rgs?sslmode=disable"
+		dbURL = "postgres://rgs-mock:rgs-mock@localhost:5432/rgs-mock?sslmode=disable"
 	}
 
 	walletUrl := os.Getenv("WALLET_URL")

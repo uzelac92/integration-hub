@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/rgs/migrations/0001_init.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/migrations/0002_seed_data.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/migrations/0003_add_updated_at_to_bets.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/migrations/0003_add_updated_at_to_bets.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/audit.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/bets.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/compliance.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/outbox.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/rounds.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/sessions.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/rgs/sqlc/queries/webhooks.sql" dialect="GenericSQL" />
+  </component>
+</project>

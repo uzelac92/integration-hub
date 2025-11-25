@@ -3,16 +3,109 @@ version: "3.9"
 services:
   postgres:
     image: postgres:15
-    container_name: integrationhub-postgres
+    container_name: ihub-postgres
     restart: always
     environment:
-      POSTGRES_USER: hub
-      POSTGRES_PASSWORD: hubpass
-      POSTGRES_DB: hubdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - ihub-net
+
+  migrate-rgs:
+    image: migrate/migrate
+    container_name: ihub-migrate-rgs
+    depends_on:
+      - postgres
+    volumes:
+      - ./rgs/migrations:/migrations
+    command: [
+      "-path=/migrations",
+      "-database=postgres://postgres:postgres@postgres:5432/rgsdb?sslmode=disable",
+      "up"
+    ]
+    restart: "on-failure"
+    networks:
+      - ihub-net
+
+  migrate-hub:
+    image: migrate/migrate
+    container_name: ihub-migrate-hub
+    depends_on:
+      - postgres
+    volumes:
+      - ./internal/storage/db/schema:/migrations
+    command: [
+      "-path=/migrations",
+      "-database=postgres://postgres:postgres@postgres:5432/hubdb?sslmode=disable",
+      "up"
+    ]
+    restart: "on-failure"
+    networks:
+      - ihub-net
+
+  walletmock:
+    build: ./walletmock
+    container_name: ihub-operator-mock
+    ports:
+      - "9000:9000"
+    restart: always
+    networks:
+      - ihub-net
+
+  integration-hub:
+    build: .
+    container_name: ihub-service
+    depends_on:
+      - postgres
+      - migrate-hub
+      - walletmock
+      - rgs
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/hubdb?sslmode=disable
+      WALLET_URL: http://walletmock:9000
+      RGS_URL: http://rgs:9001
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - ihub-net
+
+  rgs:
+    build: ./rgs
+    container_name: ihub-rgs
+    depends_on:
+      - postgres
+      - migrate-rgs
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/rgsdb?sslmode=disable
+      WALLET_URL: http://integration-hub:8080
+      WALLET_SECRET: testsecret123
+
+    ports:
+      - "9001:9001"
+    restart: always
+    networks:
+      - ihub-net
+
+  adminer:
+    image: adminer
+    container_name: ihub-adminer
+    restart: always
+    ports:
+      - "9090:8080"
+    depends_on:
+      - postgres
+    networks:
+      - ihub-net
+
+networks:
+  ihub-net:
 
 volumes:
   pgdata:

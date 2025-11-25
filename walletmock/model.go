@@ -1,4 +1,4 @@
-package wallet
+package main
 
 type Player struct {
 	Balance int64

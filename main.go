@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	hhtp "integration-hub/internal/http"
+	httpInternal "integration-hub/internal/http"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	h := hhtp.NewHandler(db.Queries, opClient)
+	h := httpInternal.NewHandler(db.Queries, opClient)
 	r.Mount("/", h.Router())
 
 	// Health

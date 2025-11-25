@@ -1,0 +1,2 @@
+CREATE DATABASE hubdb;
+CREATE DATABASE rgsdb;
