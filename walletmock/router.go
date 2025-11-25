@@ -10,6 +10,7 @@ func NewRouter(h *Handler) *chi.Mux {
 
 	r.Post("/v2/players/{playerID}/withdraw", h.Withdraw)
 	r.Post("/v2/players/{playerID}/deposit", h.Deposit)
+	r.Get("/v2/reconciliation", h.Reconciliation)
 
 	return r
 }

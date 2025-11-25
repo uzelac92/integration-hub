@@ -8,6 +8,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type HubTransaction struct {
+	ID              int64
+	RefID           string
+	PlayerID        string
+	Type            string
+	AmountCents     int64
+	Currency        string
+	OperatorStatus  string
+	OperatorBalance int64
+	CreatedAt       pgtype.Timestamptz
+}
+
 type IdempotencyKey struct {
 	ID        int32
 	Key       string

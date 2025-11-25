@@ -70,6 +70,7 @@ services:
       - postgres
       - migrate-hub
       - walletmock
+      - rgs
     environment:
       PORT: 8080
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/hubdb?sslmode=disable
@@ -78,6 +79,20 @@ services:
     ports:
       - "8080:8080"
     restart: always
+    networks:
+      - ihub-net
+
+  reconciler:
+    build:
+      context: .
+      dockerfile: cmd/reconciler/Dockerfile
+    depends_on:
+      - integration-hub
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/hubdb?sslmode=disable
+      WALLET_URL: http://walletmock:9000
+      RGS_URL: http://rgs:9001
+      PORT: 8080
     networks:
       - ihub-net
 

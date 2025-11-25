@@ -28,6 +28,15 @@ type WalletResp struct {
 	Error   string `json:"error,omitempty"`
 }
 
+func writeJSON(w http.ResponseWriter, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(w).Encode(v)
+	if err != nil {
+		log.Println("json encode error:", err)
+		return
+	}
+}
+
 func (h *Handler) Withdraw(wr http.ResponseWriter, r *http.Request) {
 	playerID := chi.URLParam(r, "playerID")
 
@@ -37,7 +46,7 @@ func (h *Handler) Withdraw(wr http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balance, err := h.wallet.Withdraw(playerID, req.Amount)
+	balance, err := h.wallet.Withdraw(playerID, req.RefID, req.Currency, req.Amount)
 	if err != nil {
 		writeJSON(wr, WalletResp{
 			Status:  "REJECTED",
@@ -62,19 +71,10 @@ func (h *Handler) Deposit(wr http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	balance := h.wallet.Deposit(playerID, req.Amount)
+	balance := h.wallet.Deposit(playerID, req.RefID, req.Currency, req.Amount)
 
 	writeJSON(wr, WalletResp{
 		Status:  "OK",
 		Balance: balance,
 	})
-}
-
-func writeJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(v)
-	if err != nil {
-		log.Println("json encode error:", err)
-		return
-	}
 }

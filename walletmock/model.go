@@ -5,12 +5,14 @@ type Player struct {
 }
 
 type Store struct {
-	Players map[string]*Player
+	Players      map[string]*Player
+	Transactions *TransactionLog
 }
 
 func NewStore() *Store {
 	return &Store{
-		Players: make(map[string]*Player),
+		Players:      make(map[string]*Player),
+		Transactions: NewTransactionLog(),
 	}
 }
 

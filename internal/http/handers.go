@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"integration-hub/internal/operator"
+	"integration-hub/internal/storage/db"
 	"log"
 	"net/http"
 	"strings"
@@ -56,6 +57,16 @@ func (h *Handler) Debit(w http.ResponseWriter, r *http.Request) {
 		Reason:       opResp.ErrorMessage,
 	}
 
+	_ = h.queries.InsertHubTransaction(r.Context(), db.InsertHubTransactionParams{
+		RefID:           req.RefID,
+		PlayerID:        req.PlayerID,
+		Type:            "DEBIT",
+		AmountCents:     req.AmountCents,
+		Currency:        req.Currency,
+		OperatorStatus:  resp.Status,
+		OperatorBalance: resp.BalanceCents,
+	})
+
 	writeJSON(w, resp)
 
 	log.Printf("[DEBIT] player=%s amount=%d status=%s duration=%s",
@@ -93,6 +104,16 @@ func (h *Handler) Credit(w http.ResponseWriter, r *http.Request) {
 		BalanceCents: opResp.Balance,
 		Reason:       opResp.ErrorMessage,
 	}
+
+	_ = h.queries.InsertHubTransaction(r.Context(), db.InsertHubTransactionParams{
+		RefID:           req.RefID,
+		PlayerID:        req.PlayerID,
+		Type:            "CREDIT",
+		AmountCents:     req.AmountCents,
+		Currency:        req.Currency,
+		OperatorStatus:  resp.Status,
+		OperatorBalance: resp.BalanceCents,
+	})
 
 	writeJSON(w, resp)
 
